@@ -24,3 +24,5 @@ async function fetchData() {
 const button = document.createElement("button")
 button.innerText = "New Cat"
 document.body.appendChild(button)
+
+button.addEventListener("click", fetchData)
