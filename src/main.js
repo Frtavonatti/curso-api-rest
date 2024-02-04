@@ -1,7 +1,10 @@
 const API_URL = "https://api.thecatapi.com/v1/images/search?limit=3"
 const API_KEY = "live_ZWpJzXJApNGoH22LkJzraLUtJNvge83hs6ZNyqlXY7VUKt6jbM3l55d6NDzh5xoQ"
-const API_URL_FAVORITES = `https://api.thecatapi.com/v1/favourites?limit=3&api_key=${API_KEY}`
+const API_URL_FAVORITES = `https://api.thecatapi.com/v1/favourites?api_key=${API_KEY}`
 
+// TAREAS:
+// 1) AGREGAR ARTICLE PARA IR MOSTRANDO LAS IMAGENES GUARDADAS EN FAVORITO EN EL NAVEDADOR
+// 2) AGREGAR FUNCIONALIDAD (button) PARA PODER BORRER IMAGENES DE FAVORITOS (y que se eliminen del navegador)
 
 const spanError = document.querySelector("#errorHandler")
 const image1 = document.querySelector("#img1")
@@ -11,7 +14,7 @@ const image4 = document.querySelector("#img4")
 
 document.addEventListener("DOMContentLoaded", async function() {
   await fetchData();
-  await saveFavorites()
+  // await saveFavorites()
   await getFavorites();
 });
 
@@ -25,7 +28,7 @@ async function fetchData () {
     image2.src = data[1].url
     image3.src = data[2].url
     
-    imageID = data[0].id;
+    imageID = data[2].id;
     console.log(imageID);
 
   } catch (error) {
@@ -46,6 +49,14 @@ async function saveFavorites() {
         sub_id: 'user-123',
       }),
     });
+
+    if (response.ok) {
+      const data = response.json()
+      console.log(data)
+      getFavorites()
+    } else {
+      console.error(`Error: ${response.status} - ${response.statusText}`);
+    }
   } catch (error) {
     console.error(error);
     spanError.innerText = error;
