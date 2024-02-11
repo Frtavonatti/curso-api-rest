@@ -4,10 +4,6 @@ const API_URL = `https://api.thecatapi.com/v1/images/search?limit=${numberOfImag
 const API_URL_FAVORITES = `https://api.thecatapi.com/v1/favourites?api_key=${API_KEY}`
 const API_URL_FAVORITES_DELETE = (id) => `https://api.thecatapi.com/v1/favourites/${id}?api_key=${API_KEY}`
 
-// TAREAS:
-// 1) AGREGAR ARTICLE PARA IR MOSTRANDO LAS IMAGENES GUARDADAS EN FAVORITO EN EL NAVEDADOR
-// 2) AGREGAR FUNCIONALIDAD (button) PARA PODER BORRER IMAGENES DE FAVORITOS (y que se eliminen del navegador)
-
 const spanError = document.querySelector("#errorHandler")
 const section = document.querySelector("#randomCats")
 const favoriteSection = document.querySelector("#favorites")
@@ -27,7 +23,11 @@ async function render (data) {
 
     const newButton = document.createElement("button")
     newButton.innerText = "Agregar a favoritos"
-    newButton.onclick = () => saveFavorites(imageID)
+    newButton.onclick = async () => {
+      saveFavorites(imageID)
+      // TAREA: Recargar solo la imagen que guardé en favoritos
+      loadImages()
+    }
     
     const newArticle = document.createElement("article")
     newArticle.append(newImage, newButton)
@@ -37,11 +37,14 @@ async function render (data) {
 
 async function loadImages () {
   try {
+    // Limpiar la sección de imagenes random antes de renderizarlas
+    section.innerHTML = "<h2> Random Cats </h2>";
+
     const response = await fetch(API_URL)
     const data = await response.json()
-    console.log("Loades images")
+    console.log("Loades images:")
     console.log(data)
-
+    
     render(data)
 
   } catch (error) {
@@ -49,23 +52,27 @@ async function loadImages () {
   }
 }
 
-//Array para guardar id´s de favoritos y usar en la función deleteAllFavorites
-let idArray = []; 
+let idArray = []; //Array para guardar id´s de favoritos y usar en la función deleteAllFavorites
 
 async function saveFavorites(id) {
   try {
     console.log(id)
-    const response = await fetch(API_URL_FAVORITES, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
-      },
-      body: JSON.stringify({
-        image_id: id,
-        sub_id: 'user-123',
-      }),
-    });
+
+    if (!idArray.includes(id)) {
+      const response = await fetch(API_URL_FAVORITES, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': API_KEY,
+        },
+        body: JSON.stringify({
+          image_id: id,
+          sub_id: 'user-123',
+        }),
+      });
+    } else {
+      console.log("El id ya está en favoritos")
+    }
 
     getFavorites()
 
@@ -76,6 +83,8 @@ async function saveFavorites(id) {
 }
 
 async function renderFavorites (data) {
+  favoriteSection.innerHTML = "<h2> Favorite Cats </h2>";  // Limpiar la sección de favoritos antes de renderizar
+
   for (let index = 0; index < data.length; index++) {
     const newImage = document.createElement("img")
     const element = data[index];
@@ -102,6 +111,9 @@ async function getFavorites () {
       console.log("Favorites:")
       console.log(data)
 
+      idArray = []; // Limpiar el array de id's antes de llenarlo con los nuevos favoritos
+
+      // Guardar id´s en un array
       for (let index = 0; index < data.length; index++) {
         const element = data[index];
         idArray.push(element.id)
@@ -119,9 +131,8 @@ async function deleteFavorites(id) {
   try {
     const response = await fetch(API_URL_FAVORITES_DELETE(id), {
       method: 'DELETE',
-    },
-    console.log("DELETED SUCCESSFULLY")
-    );
+    });
+
   } catch (error) {
     console.error(error);
     spanError.innerText = error
@@ -132,7 +143,9 @@ function deleteAllFavourites () {
   idArray.forEach(element => {
     deleteFavorites(element)
   });
-  console.log("DELETE SUCCESSFULL")
+
+  favoriteSection.innerHTML = "<h2> Favorite Cats </h2>";  // Limpiar la sección de favoritos
+  console.log("DELETED SUCCESSFULLY")
 }
 
 const button = document.createElement("button")
