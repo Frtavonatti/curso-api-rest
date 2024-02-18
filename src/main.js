@@ -1,12 +1,21 @@
+const api = axios.create({
+    baseURL : "https://api.thecatapi.com/v1",
+    headers: {'X-API-KEY': 'live_ZWpJzXJApNGoH22LkJzraLUtJNvge83hs6ZNyqlXY7VUKt6jbM3l55d6NDzh5xoQ'}
+}); 
+// api.default.headers.common["X-API-KEY"] = "live_ZWpJzXJApNGoH22LkJzraLUtJNvge83hs6ZNyqlXY7VUKt6jbM3l55d6NDzh5xoQ"
+
 const numberOfImages = 2
+
 const API_KEY = "live_ZWpJzXJApNGoH22LkJzraLUtJNvge83hs6ZNyqlXY7VUKt6jbM3l55d6NDzh5xoQ"
 const API_URL = `https://api.thecatapi.com/v1/images/search?limit=${numberOfImages}&api_key=${API_KEY}`
 const API_URL_FAVORITES = `https://api.thecatapi.com/v1/favourites?api_key=${API_KEY}`
+const API_URL_UPLOAD = `https://api.thecatapi.com/v1/images/upload`
 const API_URL_FAVORITES_DELETE = (id) => `https://api.thecatapi.com/v1/favourites/${id}?api_key=${API_KEY}`
 
 const spanError = document.querySelector("#errorHandler")
 const section = document.querySelector("#randomCats")
 const favoriteSection = document.querySelector("#favorites")
+const form = document.querySelector("#uploadingForm")
 
 document.addEventListener("DOMContentLoaded", async function() {
   await loadImages();
@@ -37,8 +46,7 @@ async function render (data) {
 
 async function loadImages () {
   try {
-    // Limpiar la sección de imagenes random antes de renderizarlas
-    section.innerHTML = "<h2> Random Cats </h2>";
+    section.innerHTML = "<h2> Random Cats </h2>"; // Limpiar la sección de imagenes random antes de renderizarlas
 
     const response = await fetch(API_URL)
     const data = await response.json()
@@ -59,16 +67,8 @@ async function saveFavorites(id) {
     console.log(id)
 
     if (!idArray.includes(id)) {
-      const response = await fetch(API_URL_FAVORITES, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': API_KEY,
-        },
-        body: JSON.stringify({
-          image_id: id,
-          sub_id: 'user-123',
-        }),
+      const response = await api.post("/favourites", {
+        image_id: id,
       });
     } else {
       console.log("El id ya está en favoritos")
@@ -80,6 +80,32 @@ async function saveFavorites(id) {
     console.error(error);
     spanError.innerText = error;
   }
+
+  // try {
+  //   console.log(id)
+
+  //   if (!idArray.includes(id)) {
+  //     const response = await fetch(API_URL_FAVORITES, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'x-api-key': API_KEY,
+  //       },
+  //       body: JSON.stringify({
+  //         image_id: id,
+  //         sub_id: 'user-123',
+  //       }),
+  //     });
+  //   } else {
+  //     console.log("El id ya está en favoritos")
+  //   }
+
+    // getFavorites()
+
+  // } catch (error) {
+  //   console.error(error);
+  //   spanError.innerText = error;
+  // }
 }
 
 async function renderFavorites (data) {
@@ -146,6 +172,22 @@ function deleteAllFavourites () {
 
   favoriteSection.innerHTML = "<h2> Favorite Cats </h2>";  // Limpiar la sección de favoritos
   console.log("DELETED SUCCESSFULLY")
+}
+
+async function uploadNewImage () {
+  const formData = new FormData(form)
+  // console.log(formData.get("file"))
+
+  const response = await fetch (API_URL_UPLOAD, {
+    method: 'POST',
+    headers: {
+      'x-api-key': API_KEY,
+    },
+    body: formData,
+  })
+
+  const data = await response.json() 
+  saveFavorites(data.id)
 }
 
 const button = document.createElement("button")
